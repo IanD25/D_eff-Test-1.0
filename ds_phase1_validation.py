@@ -261,6 +261,7 @@ def compute_fisher_dimension(G, sigma=3.0, n_samples=20):
     samples = [nodes[i] for i in np.random.choice(n, size=n_samples, replace=False)]
 
     all_ranks = []
+    all_threshold_ranks = []
     all_singular_values = []
     all_participation_ratios = []
 
@@ -297,8 +298,19 @@ def compute_fisher_dimension(G, sigma=3.0, n_samples=20):
         sv = np.linalg.svd(F, compute_uv=False)
         sv_norm = sv / sv[0] if sv[0] > 0 else sv
 
+        # Gap-based rank detection: find largest relative drop in SVs
+        # ratio[i] = sv_norm[i+1] / sv_norm[i]; rank = argmin(ratio) + 1
+        if len(sv_norm) > 1 and sv_norm[0] > 0:
+            ratios = sv_norm[1:] / np.maximum(sv_norm[:-1], 1e-15)
+            gap_rank = int(np.argmin(ratios) + 1)
+        else:
+            gap_rank = 1
+
+        # Also keep fixed-threshold rank for diagnostics
         threshold = 0.01
-        eff_rank = int(np.sum(sv_norm > threshold))
+        threshold_rank = int(np.sum(sv_norm > threshold))
+
+        eff_rank = gap_rank
 
         # Participation ratio
         if np.sum(sv ** 2) > 0:
@@ -307,6 +319,7 @@ def compute_fisher_dimension(G, sigma=3.0, n_samples=20):
             participation_ratio = 0.0
 
         all_ranks.append(eff_rank)
+        all_threshold_ranks.append(threshold_rank)
         all_singular_values.append(sv_norm)
         all_participation_ratios.append(participation_ratio)
 
