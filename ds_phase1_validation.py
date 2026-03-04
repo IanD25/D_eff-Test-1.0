@@ -8,7 +8,7 @@ torus lattices where the true answer is known.
 
 Test systems:
   - 2D flat torus (200x200): true dimension = 2.0
-  - 3D flat torus (25x25x25): true dimension = 3.0
+  - 3D flat torus (50x50x50): true dimension = 3.0
 
 Three measurement routes:
   1. Growth dimension (BFS ball volumes)
@@ -55,15 +55,15 @@ SYSTEMS = {
         'n_eigenvalues': 500,
     },
     '3d': {
-        'name': '3D Torus (25x25x25)',
+        'name': '3D Torus (50x50x50)',
         'prefix': 'torus3d',
-        'n': 25,
+        'n': 50,
         'dim': 3,
         'true_d': 3.0,
-        'expected_nodes': 15625,
+        'expected_nodes': 125000,
         'expected_degree': 6,
-        'gate_lo': 2.70,
-        'gate_hi': 3.30,
+        'gate_lo': 2.85,
+        'gate_hi': 3.15,
         'agreement_gate': 0.15,
         'growth_samples': 15,
         'fisher_samples': 20,
@@ -197,26 +197,59 @@ def estimate_growth_dimension(mean_volumes, maxR):
 # Route 2: Spectral Dimension
 # ============================================================================
 
-def compute_spectral_dimension(G, n_eigenvalues=500):
-    """Estimate dimension from Weyl law: N(lambda) ~ lambda^{d/2}."""
-    A = nx.adjacency_matrix(G).astype(float)
+def torus_eigenvalues_exact(side_n, dim):
+    """Compute exact Laplacian eigenvalues for a d-dimensional torus analytically.
+
+    For a d-dimensional torus with side length n:
+      lambda(k1,...,kd) = 2 * sum_j (1 - cos(2*pi*kj/n))
+    for kj = 0, 1, ..., n-1.
+
+    Returns sorted array of all eigenvalues (excluding zero).
+    """
+    freqs = 2.0 * np.pi * np.arange(side_n) / side_n
+    cosines = 1.0 - np.cos(freqs)  # shape (n,)
+
+    if dim == 2:
+        # lambda(k1,k2) = 2*(cosines[k1] + cosines[k2])
+        eigs = 2.0 * (cosines[:, None] + cosines[None, :]).ravel()
+    elif dim == 3:
+        # lambda(k1,k2,k3) = 2*(cosines[k1] + cosines[k2] + cosines[k3])
+        eigs = 2.0 * (cosines[:, None, None] + cosines[None, :, None]
+                       + cosines[None, None, :]).ravel()
+    else:
+        raise ValueError(f"Unsupported dimension {dim}")
+
+    eigs = np.sort(eigs)
+    eigs = eigs[eigs > 1e-10]  # drop zero eigenvalue(s)
+    return eigs
+
+
+def compute_spectral_dimension(G, n_eigenvalues=500, torus_side=None, torus_dim=None):
+    """Estimate dimension from Weyl law: N(lambda) ~ lambda^{d/2}.
+
+    If torus_side and torus_dim are provided, uses exact analytical eigenvalues
+    (fast, works at any scale). Otherwise falls back to sparse eigsh.
+    """
     n = G.number_of_nodes()
-    degree = list(dict(G.degree()).values())[0]
 
-    D = diags([degree] * n, 0, format='csr')
-    L = D - A
-
-    k = min(n_eigenvalues + 1, n - 2)
-
-    # Use shift-invert mode for numerical stability
-    try:
-        eigenvalues = eigsh(L, k=k, sigma=0.01, return_eigenvectors=False)
-    except Exception:
-        print("    shift-invert failed, trying which='SM'...")
-        eigenvalues = eigsh(L, k=k, which='SM', return_eigenvectors=False)
-
-    eigenvalues = np.sort(np.real(eigenvalues))
-    eigenvalues = eigenvalues[eigenvalues > 1e-10]
+    if torus_side is not None and torus_dim is not None:
+        print(f"    Using exact analytical eigenvalues for {torus_dim}D torus (n={torus_side})...")
+        all_eigs = torus_eigenvalues_exact(torus_side, torus_dim)
+        # Use the smallest n_eigenvalues for Weyl fitting (same as before)
+        eigenvalues = all_eigs[:n_eigenvalues]
+    else:
+        A = nx.adjacency_matrix(G).astype(float)
+        degree = list(dict(G.degree()).values())[0]
+        D = diags([degree] * n, 0, format='csr')
+        L = D - A
+        k = min(n_eigenvalues + 1, n - 2)
+        try:
+            eigenvalues = eigsh(L, k=k, sigma=0.01, return_eigenvectors=False)
+        except Exception:
+            print("    shift-invert failed, trying which='SM'...")
+            eigenvalues = eigsh(L, k=k, which='SM', return_eigenvectors=False)
+        eigenvalues = np.sort(np.real(eigenvalues))
+        eigenvalues = eigenvalues[eigenvalues > 1e-10]
 
     n_eigs = len(eigenvalues)
     indices = np.arange(1, n_eigs + 1, dtype=float)
@@ -532,7 +565,8 @@ def run_system(key, cfg):
     # --- Step 2: Route 2 — Spectral Dimension ---
     print(f"\n[Route 2] Spectral Dimension...")
     t0 = time.time()
-    spectral = compute_spectral_dimension(G, n_eigenvalues=cfg['n_eigenvalues'])
+    spectral = compute_spectral_dimension(G, n_eigenvalues=cfg['n_eigenvalues'],
+                                              torus_side=cfg['n'], torus_dim=cfg['dim'])
     spectral_time = time.time() - t0
 
     spectral_est = spectral['spectral_dimension']
