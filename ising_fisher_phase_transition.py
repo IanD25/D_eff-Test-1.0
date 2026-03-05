@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """
-DS Phase 2: Ising Fisher Phase Transition
-============================================
+DS Phase 2: Ising Fisher Phase Transition (v2 — Manhattan distance)
+=====================================================================
 Tests whether Fisher diagnostic toolkit can detect the approach to the
 2D Ising phase transition before macroscopic observables signal it.
 
 Uses the thermal correlation function G(r,T) as the Fisher kernel,
 replacing the exponential distance kernel from Phase 1.
+
+v2 change: Manhattan distance (|dx|+|dy|) replaces Chebyshev (max(|dx|,|dy|))
+for correlation function radial binning and kernel construction. Manhattan
+distance preserves the additivity property d(u,v+Δ)+d(u,v-Δ)=2d(u,v)
+required for anti-parallel score vectors on the lattice → rank=2 at high T.
 
 Systems: 2D square lattice with periodic BCs, N = 64, 128, 256
 Temperature sweep: 12 points from 1.5*Tc down to 0.9*Tc
@@ -121,7 +126,11 @@ def measure_energy(lattice, J=1.0):
 def measure_correlations_fft(lattice):
     """
     Measure connected G(r) using FFT-based autocorrelation.
-    Returns G[r] for r = 0, 1, ..., N//4 using Chebyshev distance.
+    Returns G[r] for r = 0, 1, ..., N//2 using Manhattan distance.
+
+    v2: Manhattan distance (|dx|+|dy|) replaces Chebyshev (max(|dx|,|dy|)).
+    Manhattan distance preserves the additivity property
+    d(u,v+Δ)+d(u,v-Δ)=2d(u,v) required for anti-parallel score vectors.
     """
     N = lattice.shape[0]
     lat_float = lattice.astype(np.float64)
@@ -133,16 +142,16 @@ def measure_correlations_fft(lattice):
     power = F * np.conj(F)
     G_full = np.real(np.fft.ifft2(power)) / (N * N)
 
-    # Radial average using Chebyshev distance
-    max_r = N // 4
+    # Radial average using Manhattan distance
+    max_r = N // 2
     G_r = np.zeros(max_r + 1)
     counts = np.zeros(max_r + 1)
 
-    # Build distance grid (Chebyshev with periodic wrapping)
+    # Build distance grid (Manhattan with periodic wrapping)
     ix = np.arange(N)
     dx = np.minimum(ix, N - ix)
     DX, DY = np.meshgrid(dx, dx)
-    dist_grid = np.maximum(DX, DY)
+    dist_grid = DX + DY  # Manhattan distance
 
     for r in range(max_r + 1):
         mask = (dist_grid == r)
@@ -159,7 +168,7 @@ def accumulate_correlations(lattice, T, n_configs=500, n_sweeps_between=5):
     Returns averaged G(r) array.
     """
     N = lattice.shape[0]
-    max_r = N // 4
+    max_r = N // 2
     G_sum = np.zeros(max_r + 1)
 
     for i in range(n_configs):
@@ -218,16 +227,18 @@ def build_thermal_kernel(G_r, N, v0):
     Build thermal probability distribution p_{v0}(u; T) using |G(r)|.
     v0 = (i0, j0) tuple.
     Returns flat array of shape (N*N,).
+
+    v2: Manhattan distance (|di|+|dj|) replaces Chebyshev (max(|di|,|dj|)).
     """
     i0, j0 = v0
     max_r = len(G_r) - 1
 
-    # Build distance from v0 to all sites (Chebyshev, periodic)
+    # Build distance from v0 to all sites (Manhattan, periodic)
     ix = np.arange(N)
     di = np.minimum(np.abs(ix - i0), N - np.abs(ix - i0))
     dj = np.minimum(np.abs(ix - j0), N - np.abs(ix - j0))
     DI, DJ = np.meshgrid(di, dj, indexing='ij')
-    dist = np.maximum(DI, DJ)
+    dist = DI + DJ  # Manhattan distance
 
     # Build weights from |G(r)|
     weights = np.zeros((N, N), dtype=np.float64)
