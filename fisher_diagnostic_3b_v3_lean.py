@@ -335,22 +335,10 @@ class FisherDiagnostic3B(QCAlgorithm):
             self.log("No results to save")
             return
 
-        # Save CSV
-        fields = ["date", "spy", "vix"]
-        for w in self.windows:
-            fields += [f"w{w}_sv2sv1", f"w{w}_rank", f"w{w}_eta", f"w{w}_pr", f"w{w}_n_valid"]
-
-        buf    = io.StringIO()
-        writer = csv.DictWriter(buf, fieldnames=fields, extrasaction="ignore")
-        writer.writeheader()
-        for row in self.results:
-            writer.writerow(row)
-        self.object_store.save("phase3b_results_csv", buf.getvalue())
-        self.log(f"Saved {len(self.results)} rows to ObjectStore:phase3b_results_csv")
+        from datetime import date as dt, timedelta
 
         gate_str = "\n".join(self.gate_log)
         self.object_store.save("phase3b_gate_log", gate_str)
-        self.log(f"Saved {len(self.gate_log)} gate entries")
 
         # ── Summary stats ─────────────────────────────────────────────
         self.log("=" * 72)
@@ -361,13 +349,11 @@ class FisherDiagnostic3B(QCAlgorithm):
         self.log(f"Universe: {len(self.symbols)} assets resolved")
 
         for w in self.windows:
-            sv_vals  = [r.get(f"w{w}_sv2sv1") for r in self.results if r.get(f"w{w}_sv2sv1") is not None]
-            rk_vals  = [r.get(f"w{w}_rank")   for r in self.results if r.get(f"w{w}_rank")   is not None]
-            eta_vals = [r.get(f"w{w}_eta")    for r in self.results if r.get(f"w{w}_eta")    is not None]
-            pr_vals  = [r.get(f"w{w}_pr")     for r in self.results if r.get(f"w{w}_pr")     is not None]
-            nv_vals  = [r.get(f"w{w}_n_valid") for r in self.results if r.get(f"w{w}_n_valid") is not None]
+            sv_vals  = [r[f"w{w}_sv2sv1"] for r in self.results if r.get(f"w{w}_sv2sv1") is not None]
+            rk_vals  = [r[f"w{w}_rank"]   for r in self.results if r.get(f"w{w}_rank")   is not None]
+            eta_vals = [r[f"w{w}_eta"]    for r in self.results if r.get(f"w{w}_eta")    is not None]
+            pr_vals  = [r[f"w{w}_pr"]     for r in self.results if r.get(f"w{w}_pr")     is not None]
             null_ct  = sum(1 for r in self.results if r.get(f"w{w}_sv2sv1") is None)
-
             if sv_vals:
                 self.log(f"--- Window {w}d ({len(sv_vals)} valid / {null_ct} null) ---")
                 self.log(f"  SV2/SV1: mean={np.mean(sv_vals):.4f}  std={np.std(sv_vals):.4f}  "
@@ -378,13 +364,8 @@ class FisherDiagnostic3B(QCAlgorithm):
                          f"min={np.min(eta_vals):.4f}  max={np.max(eta_vals):.4f}")
                 self.log(f"  PR:      mean={np.mean(pr_vals):.3f}  std={np.std(pr_vals):.3f}  "
                          f"min={np.min(pr_vals):.3f}  max={np.max(pr_vals):.3f}")
-                self.log(f"  N_valid: mean={np.mean(nv_vals):.1f}  "
-                         f"min={np.min(nv_vals)}  max={np.max(nv_vals)}")
 
         # ── VIX correlation ───────────────────────────────────────────
-        sv90 = [r.get("w90_sv2sv1") for r in self.results if r.get("w90_sv2sv1") is not None]
-        vix_vals = [r.get("vix") for r in self.results if r.get("w90_sv2sv1") is not None and r.get("vix") is not None]
-        # Pair them correctly
         paired_sv, paired_vix = [], []
         for r in self.results:
             if r.get("w90_sv2sv1") is not None and r.get("vix") is not None:
@@ -398,54 +379,170 @@ class FisherDiagnostic3B(QCAlgorithm):
         ok_ct   = sum(1 for g in self.gate_log if "OK"    in g)
         fail_ct = sum(1 for g in self.gate_log if "FAIL"  in g)
         err_ct  = sum(1 for g in self.gate_log if "ERROR" in g)
-        self.log(f"--- Gate Summary ---")
-        self.log(f"  OK: {ok_ct}  FAIL: {fail_ct}  ERROR: {err_ct}")
+        self.log(f"--- Gate Summary: OK={ok_ct}  FAIL={fail_ct}  ERROR={err_ct} ---")
 
-        # ── Rolling threshold crossing summary (P3B-1 kill test) ─────
+        # ══════════════════════════════════════════════════════════════
+        # P3B-1  ROLLING THRESHOLD CROSSING SUMMARY
+        # ══════════════════════════════════════════════════════════════
         self.log("=" * 72)
-        self.log("ROLLING THRESHOLD CROSSING SUMMARY  (P3B-1 KILL TEST)")
-        self.log(f"Rolling window: {self.rolling_n} periods  "
-                 f"(~{self.rolling_n * self.step} trading days ≈ 252d)")
-        self.log(f"Crisis reference dates: {self.crisis_dates}")
+        self.log("P3B-1: ROLLING THRESHOLD CROSSINGS")
+        self.log(f"Rolling window: ~{self.rolling_n * self.step} trading days  "
+                 f"Crises: {self.crisis_dates}")
 
-        from datetime import date as dt
-
-        p3b1_pass = False  # will set True if any UP crossing is within 30d of a crisis
+        p3b1_pass = False
 
         for w in self.windows:
-            ups = [(d, v, t) for (direction, d, v, t) in self.rolling_crossings[w]
-                   if direction == "UP"]
-            dns = [(d, v, t) for (direction, d, v, t) in self.rolling_crossings[w]
-                   if direction == "DOWN"]
-            self.log(f"--- w{w}: {len(ups)} UP crossings, {len(dns)} DOWN crossings ---")
+            ups = [(d, v, t) for (direction, d, v, t) in self.rolling_crossings[w] if direction == "UP"]
+            dns = [(d, v, t) for (direction, d, v, t) in self.rolling_crossings[w] if direction == "DOWN"]
+            self.log(f"--- w{w}: {len(ups)} UP  {len(dns)} DOWN ---")
             for cross_date_str, sv_val, thresh_val in ups:
                 cross_dt = dt.fromisoformat(cross_date_str)
-                # Find nearest subsequent DOWN crossing (episode end)
-                end_str = "ongoing"
-                for (dd, dv, dt2) in dns:
-                    if dd > cross_date_str:
-                        end_str = dd
-                        break
-                self.log(f"  UP  {cross_date_str} → {end_str}  "
-                         f"SV={sv_val:.4f} thresh={thresh_val:.4f}")
-                # Crisis proximity
+                end_str = next((dd for (dd, dv, dt2) in dns if dd > cross_date_str), "ongoing")
+                self.log(f"  UP {cross_date_str}->{end_str} SV={sv_val:.4f} thr={thresh_val:.4f}")
                 for crisis_name, crisis_str in self.crisis_dates.items():
-                    crisis_dt_obj = dt.fromisoformat(crisis_str)
-                    delta = (crisis_dt_obj - cross_dt).days
+                    delta = (dt.fromisoformat(crisis_str) - cross_dt).days
                     if 0 <= delta <= 90:
-                        verdict = ""
+                        tag = " *** P3B-1 PASS ***" if delta <= 30 else f" ({delta}d)"
                         if delta <= 30:
-                            verdict = "  *** P3B-1 PASS ***"
                             p3b1_pass = True
-                        elif delta <= 60:
-                            verdict = "  (within 60d)"
-                        self.log(f"    {delta:3d}d before {crisis_name}{verdict}")
+                        self.log(f"    {delta:3d}d before {crisis_name}{tag}")
 
-        self.log("--- P3B-1 KILL TEST VERDICT ---")
-        if p3b1_pass:
-            self.log("  RESULT: PASS — at least one rolling UP crossing within 30d of a crisis")
-        else:
-            self.log("  RESULT: FAIL — no rolling UP crossing found within 30d of any crisis")
-            self.log("  (check individual crossing dates above against 60-90d windows)")
+        self.log(f"P3B-1 VERDICT: {'PASS' if p3b1_pass else 'FAIL'}")
 
+        # ══════════════════════════════════════════════════════════════
+        # P3B-4  YEARLY SV2/SV1 PEAKS
+        # ══════════════════════════════════════════════════════════════
+        self.log("=" * 72)
+        self.log("P3B-4: YEARLY SV2/SV1 PEAKS")
+        self.log("year  w30_peak  w30_date    w60_peak  w60_date    w90_peak  w90_date")
+        for year in range(2005, 2025):
+            ys = str(year)
+            yr = [r for r in self.results if r["date"][:4] == ys]
+            parts = []
+            for w in self.windows:
+                vals = [(r["date"], r[f"w{w}_sv2sv1"]) for r in yr if r.get(f"w{w}_sv2sv1") is not None]
+                if vals:
+                    pd_, pv = max(vals, key=lambda x: x[1])
+                    parts.append(f"{pv:.4f}  {pd_}")
+                else:
+                    parts.append("N/A       N/A       ")
+            self.log(f"{ys}  {'  '.join(parts)}")
+
+        # Direct P3B-4 verdict: 2008 peak vs 2018 peak per window
+        for w in self.windows:
+            sv08 = [r[f"w{w}_sv2sv1"] for r in self.results if r["date"][:4] == "2008" and r.get(f"w{w}_sv2sv1") is not None]
+            sv18 = [r[f"w{w}_sv2sv1"] for r in self.results if r["date"][:4] == "2018" and r.get(f"w{w}_sv2sv1") is not None]
+            if sv08 and sv18:
+                p08, p18 = max(sv08), max(sv18)
+                v = "PASS" if p08 > p18 else "FAIL"
+                self.log(f"P3B-4 w{w}: 2008_peak={p08:.4f}  2018_peak={p18:.4f}  -> {v}")
+
+        # ══════════════════════════════════════════════════════════════
+        # P3B-5  SHORT-WINDOW LEADS LONG-WINDOW
+        # ══════════════════════════════════════════════════════════════
+        self.log("=" * 72)
+        self.log("P3B-5: FIRST ROLLING-THRESHOLD CROSSING IN 90d PRE-CRISIS")
+        self.log("(positive lead = shorter window fires earlier)")
+
+        key_crises = [
+            ("Bear_Stearns", "2008-03-14"),
+            ("Lehman",       "2008-09-15"),
+            ("COVID_bottom", "2020-03-23"),
+        ]
+
+        for crisis_name, crisis_str in key_crises:
+            crisis_dt_obj = dt.fromisoformat(crisis_str)
+            lookback = (crisis_dt_obj - timedelta(days=90)).isoformat()[:10]
+            first = {}
+            for w in self.windows:
+                for direction, d, sv, thresh in self.rolling_crossings[w]:
+                    if direction == "UP" and lookback <= d <= crisis_str:
+                        first[w] = d
+                        break
+            self.log(f"--- {crisis_name} ({crisis_str}) ---")
+            for w in self.windows:
+                fc = first.get(w, "none")
+                if fc != "none":
+                    lead = (crisis_dt_obj - dt.fromisoformat(fc)).days
+                    self.log(f"  w{w}: {fc}  ({lead}d before)")
+                else:
+                    self.log(f"  w{w}: no crossing in 90d window")
+            fc30 = first.get(30)
+            fc90 = first.get(90)
+            if fc30 and fc90:
+                lead = (dt.fromisoformat(fc90) - dt.fromisoformat(fc30)).days
+                v = "PASS" if lead >= 5 else f"FAIL (lead={lead}d)"
+                self.log(f"  P3B-5 w30 leads w90 by {lead}d -> {v}")
+            elif fc30 and not fc90:
+                self.log(f"  P3B-5 w30 fired, w90 did not -> PASS")
+            else:
+                self.log(f"  P3B-5 insufficient data")
+
+        # ══════════════════════════════════════════════════════════════
+        # P3B-2 / P3B-3  CRISIS WINDOW DATA TABLES + DIRECT VERDICTS
+        # Logs CSV rows for 90d pre-crisis to 30d post-crisis
+        # ══════════════════════════════════════════════════════════════
+        self.log("=" * 72)
+        self.log("P3B-2/P3B-3: CRISIS WINDOW DATA")
+        self.log("date,w30_sv,w30_rk,w30_eta,w60_sv,w60_rk,w60_eta,w90_sv,w90_rk,w90_eta")
+
+        crisis_windows = [
+            ("Bear_Stearns", "2008-03-14", 90, 30),
+            ("Lehman",       "2008-09-15", 90, 30),
+            ("COVID_bottom", "2020-03-23", 90, 30),
+        ]
+
+        for crisis_name, crisis_str, pre_days, post_days in crisis_windows:
+            crisis_dt_obj = dt.fromisoformat(crisis_str)
+            w_start = (crisis_dt_obj - timedelta(days=pre_days)).isoformat()[:10]
+            w_end   = (crisis_dt_obj + timedelta(days=post_days)).isoformat()[:10]
+            self.log(f"# {crisis_name} {w_start} to {w_end}")
+            for row in self.results:
+                d = row["date"]
+                if w_start <= d <= w_end:
+                    self.log(
+                        f"{d},"
+                        f"{row.get('w30_sv2sv1','')},{row.get('w30_rank','')},{row.get('w30_eta','')},"
+                        f"{row.get('w60_sv2sv1','')},{row.get('w60_rank','')},{row.get('w60_eta','')},"
+                        f"{row.get('w90_sv2sv1','')},{row.get('w90_rank','')},{row.get('w90_eta','')}"
+                    )
+
+            # ── P3B-2: Rank trend in 60d pre-crisis ──────────────────
+            pre60_start = (crisis_dt_obj - timedelta(days=60)).isoformat()[:10]
+            pre_rows = [r for r in self.results if pre60_start <= r["date"] <= crisis_str]
+            for w in [30, 90]:
+                rk = [r[f"w{w}_rank"] for r in pre_rows if r.get(f"w{w}_rank") is not None]
+                if len(rk) >= 4:
+                    n = len(rk)
+                    early = float(np.mean(rk[:n // 2]))
+                    late  = float(np.mean(rk[n // 2:]))
+                    delta_rk = late - early
+                    v = "PASS" if delta_rk > 0 else "FAIL"
+                    self.log(f"P3B-2 {crisis_name} w{w}: rank early={early:.2f} late={late:.2f} "
+                             f"delta={delta_rk:+.2f} -> {v}")
+
+            # ── P3B-3: η extremum within ±30d of crisis ──────────────
+            eta30_start = (crisis_dt_obj - timedelta(days=30)).isoformat()[:10]
+            eta30_end   = (crisis_dt_obj + timedelta(days=30)).isoformat()[:10]
+            surr_start  = (crisis_dt_obj - timedelta(days=90)).isoformat()[:10]
+            surr_end    = (crisis_dt_obj + timedelta(days=90)).isoformat()[:10]
+            for w in [30, 90]:
+                eta_win  = [r[f"w{w}_eta"] for r in self.results
+                            if eta30_start <= r["date"] <= eta30_end and r.get(f"w{w}_eta") is not None]
+                eta_surr = [r[f"w{w}_eta"] for r in self.results
+                            if surr_start  <= r["date"] <= surr_end  and r.get(f"w{w}_eta") is not None]
+                if eta_win and len(eta_surr) >= 4:
+                    mu, sigma = float(np.mean(eta_surr)), float(np.std(eta_surr))
+                    emin, emax = min(eta_win), max(eta_win)
+                    extremum = (emin < mu - sigma) or (emax > mu + sigma)
+                    v = "PASS" if extremum else "FAIL"
+                    self.log(f"P3B-3 {crisis_name} w{w}: eta_win=[{emin:.4f},{emax:.4f}] "
+                             f"surr={mu:.4f}+/-{sigma:.4f} -> {v}")
+
+        # ══════════════════════════════════════════════════════════════
+        # FINAL VERDICT SUMMARY
+        # ══════════════════════════════════════════════════════════════
+        self.log("=" * 72)
+        self.log("PREDICTION VERDICT SUMMARY")
+        self.log("(search log for P3B-1/P3B-2/P3B-3/P3B-4/P3B-5 PASS/FAIL)")
         self.log("=" * 72)
