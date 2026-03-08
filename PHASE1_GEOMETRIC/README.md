@@ -234,25 +234,23 @@ Random graphs with no spatial/geometric structure.
 ## Files & Repository Structure
 
 ```
-D_eff-Test-1.0/
-├── PHASE1_README.md (this file)
-├── phase1_results/
-│   ├── tori_2d_results.csv
-│   ├── tori_3d_results.csv
-│   ├── tori_4d_results.csv
-│   ├── sierpinski_gasket_pr_convergence.csv
-│   ├── sierpinski_carpet_pr_convergence.csv
-│   ├── coarse_graining_2d.csv
-│   ├── coarse_graining_3d.csv
-│   ├── rgg_results.csv
-│   ├── erdos_renyi_results.csv
+PHASE1_GEOMETRIC/
+├── README.md (this file)
+├── results/
+│   ├── PHASE1_RESULTS.md
+│   ├── PHASE1_EXTENSION_RESULTS.md
+│   ├── PHASE1_COARSEGRAIN_RESULTS.md
+│   ├── PHASE1_RANDOM_GRAPHS_RESULTS.md
 │   └── [plots and visualizations]
 ├── src/
-│   ├── fisher_rank.py (core FIM construction)
-│   ├── dimension_estimators.py (gap-based rank, PR)
-│   ├── system_generators.py (tori, fractals, RGGs, etc.)
-│   └── analysis.py (statistical summaries)
-└── PHASE1_MANUSCRIPT_FINAL.pdf (full paper)
+│   ├── ds_phase1_validation.py (core validation)
+│   ├── ds_phase1_extension.py (extensions v1–v4)
+│   ├── ds_phase1_coarsegraining.py (DPI tests)
+│   ├── ds_phase1_random_graphs.py (RGG + ER)
+│   ├── ds_phase1_periodic_rgg.py (periodic RGG)
+│   └── ds_phase1_symmetrized_fim.py (symmetrized FIM)
+└── specs/
+    └── [handback documents]
 ```
 
 ---
@@ -334,7 +332,7 @@ plt.show()
 
 ## References
 
-**Paper**: Darling, Ian. *Effective Dimensionality from Fisher Information Rank: Operational Validation on Tori, Fractals, Random Graphs, and Coarse-Grained Lattices.* Preprint (2026). arXiv:yy.yyyyy [math-ph]
+**Paper**: Darling, Ian. *Effective Dimensionality from Fisher Information Rank: Operational Validation on Tori, Fractals, Random Graphs, and Coarse-Grained Lattices.* Preprint (2026).
 
 **Related Work**:
 - Fisher Information geometry (Amari & Nagaoka, 2000)
@@ -351,4 +349,4 @@ plt.show()
 
 ---
 
-**Status**: Phase 1 validation complete. Phase 2 (Ising Fisher) and Phase 3B (Financial networks) in progress.
+**Status**: Phase 1 validation complete. Phase 2 (Thermal Regime) complete. See `PHASE2_THERMAL/`.
