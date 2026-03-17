@@ -64,7 +64,7 @@ D_eff-Test-1.0/
 │   └── results/
 ├── PHASE2_THERMAL/              ← Phase transitions + cross-domain transfer (Paper 2)
 │   ├── README.md
-│   ├── DS_Phase2_Thermal_Paper_FINAL_v2.pdf
+│   ├── DS_Phase2_Thermal_Paper_FINAL.pdf
 │   ├── src/
 │   └── results/
 └── docs/                        ← Project documentation
@@ -78,7 +78,7 @@ Each phase is self-contained with its own README, source code, and results. All 
 
 1. **Geometric regime**: *Effective Dimensionality from Fisher Information Rank: Operational Validation on Tori, Fractals, Random Graphs, and Coarse-Grained Lattices.* [PDF](PHASE1_GEOMETRIC/DS_Phase1_MANUSCRIPT_FINAL.pdf)
 
-2. **Thermal regime**: *Spectral Phase Transitions in the Fisher Information Matrix: Universality of the Degeneracy Swap and Classification of Transition Order.* [PDF](PHASE2_THERMAL/DS_Phase2_Thermal_Paper_FINAL_v2.pdf)
+2. **Thermal regime**: *Spectral Phase Transitions in the Fisher Information Matrix: Universality of the Degeneracy Swap and Classification of Transition Order.* [PDF](PHASE2_THERMAL/DS_Phase2_Thermal_Paper_FINAL.pdf)
 
 ---
 

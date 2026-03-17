@@ -1,6 +1,6 @@
 # DS Framework — Phase 2: Spectral Phase Transitions in the Fisher Information Matrix
 
-**Status**: ✅ Complete | **Paper**: [DS_Phase2_Thermal_Paper_FINAL_v2.pdf](DS_Phase2_Thermal_Paper_FINAL_v2.pdf) | **Author**: Ian Darling
+**Status**: ✅ Complete | **Paper**: [DS_Phase2_Thermal_Paper_FINAL.pdf](DS_Phase2_Thermal_Paper_FINAL.pdf) | **Author**: Ian Darling
 
 ---
 
@@ -148,9 +148,7 @@ python eeg_fisher_phase3e.py
 ```
 PHASE2_THERMAL/
 ├── README.md                              (this file)
-├── DS_Phase2_Thermal_Paper_FINAL_v2.pdf   (paper)
-├── DS_Phase2_Thermal_Paper_FINAL_v2.tex   (source)
-├── DS_Phase2_Thermal_Paper_FINAL.pdf      (earlier draft)
+├── DS_Phase2_Thermal_Paper_FINAL.pdf      (paper)
 ├── src/
 │   ├── ising_fisher_phase2.py             (2D Ising — Phase 2)
 │   ├── ising_3d_fisher.py                 (3D Ising — Phase 3D-1)

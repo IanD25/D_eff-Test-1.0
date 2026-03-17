@@ -1,6 +1,6 @@
 # DS Framework — Phase 1: Effective Dimensionality from Fisher Information Rank
 
-**Status**: ✅ Complete | **Paper**: [DS_Phase1_MANUSCRIPT_FINAL.pdf](https://github.com/IanD25/D_eff-Test-1.0) | **Author**: Ian Darling
+**Status**: ✅ Complete | **Paper**: [DS_Phase1_MANUSCRIPT_FINAL.pdf](DS_Phase1_MANUSCRIPT_FINAL.pdf) | **Author**: Ian Darling
 
 ---
 
