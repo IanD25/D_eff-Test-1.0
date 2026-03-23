@@ -1,6 +1,6 @@
 # DS Framework — Phase 2: Spectral Phase Transitions in the Fisher Information Matrix
 
-**Status**: ✅ Complete | **Paper**: [DS_Phase2_Thermal_Paper_FINAL_v2.pdf](DS_Phase2_Thermal_Paper_FINAL_v2.pdf) | **Author**: Ian Darling
+**Status**: ✅ Complete | **Paper**: [DS_Phase2_Thermal_Paper_FINAL_v2.pdf]([DS_Phase2_Thermal_Paper_FINAL_v2.pdf](https://github.com/IanD25/D_eff-Test-1.0/blob/main/PHASE2_THERMAL/DS_Phase2_Thermal_Paper_FINAL.pdf)) | **Author**: Ian Darling
 
 ---
 
