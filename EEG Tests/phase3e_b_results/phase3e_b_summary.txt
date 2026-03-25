@@ -1,0 +1,87 @@
+DS Phase 3E-B: EEG Multiplex FIM Results Summary
+=================================================================
+
+P3E-B-0 RESOLUTION GATE: C(r) bins >= 5 in >= 80% windows
+-----------------------------------------------------------------
+  chb01: mean_bins=2.9, pct_above_5=2.0% -> FAIL
+  chb02: mean_bins=3.2, pct_above_5=6.4% -> FAIL
+  chb03: mean_bins=3.4, pct_above_5=8.3% -> FAIL
+  chb04: mean_bins=3.3, pct_above_5=6.7% -> FAIL
+  chb05: mean_bins=3.0, pct_above_5=3.1% -> FAIL
+
+Resolution gate: 0/5 patients PASS
+WARNING: Resolution fix insufficient — diameter still too small
+
+
+--- chb01 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR   Bins
+pre_ictal         840     0.5117     1.04   0.5073    7.753    2.8
+ictal             449     0.4990     1.06   0.4933    7.493    2.8
+post_ictal        826     0.5432     1.02   0.5409    8.265    3.1
+
+
+--- chb02 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR   Bins
+pre_ictal         360     0.5275     1.07   0.5269    7.953    3.5
+ictal             175     0.4734     1.06   0.4689    7.318    2.7
+post_ictal        354     0.4988     1.09   0.4966    7.597    3.1
+
+
+--- chb03 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR   Bins
+pre_ictal         840     0.5094     1.26   0.5063    7.681    3.5
+ictal             409     0.5055     1.07   0.5048    7.762    3.5
+post_ictal        826     0.4523     1.40   0.4490    6.891    3.2
+
+
+--- chb04 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR   Bins
+pre_ictal         120     0.5117     1.02   0.5094    7.782    3.0
+ictal             103     0.5537     1.04   0.5518    8.022    3.4
+post_ictal        118     0.5792     1.05   0.5778    8.480    3.5
+
+
+--- chb05 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR   Bins
+pre_ictal         600     0.5102     1.04   0.5084    7.907    3.0
+ictal             563     0.5051     1.05   0.5005    7.584    2.7
+post_ictal        590     0.5173     1.07   0.5164    7.891    3.3
+
+=================================================================
+P3E-B-1 KILL TEST: SV2/SV1 ictal > pre-ictal by >= 0.05
+-----------------------------------------------------------------
+  chb01: pre=0.5117 ictal=0.4990 delta=-0.0127 -> FAIL
+  chb02: pre=0.5275 ictal=0.4734 delta=-0.0541 -> FAIL
+  chb03: pre=0.5094 ictal=0.5055 delta=-0.0040 -> FAIL
+  chb04: pre=0.5117 ictal=0.5537 delta=+0.0419 -> FAIL
+  chb05: pre=0.5102 ictal=0.5051 delta=-0.0051 -> FAIL
+
+P3E-B-1: 0/5 patients pass. KILL TEST FAILS
+
+P3E-B-2: SV2/SV1 post-ictal < ictal
+  chb01: ictal=0.4990 post=0.5432 -> FAIL
+  chb02: ictal=0.4734 post=0.4988 -> FAIL
+  chb03: ictal=0.5055 post=0.4523 -> PASS
+  chb04: ictal=0.5537 post=0.5792 -> FAIL
+  chb05: ictal=0.5051 post=0.5173 -> FAIL
+
+P3E-B-3: Rank decreases during ictal
+  chb01: pre=1.04 ictal=1.06 -> FAIL
+  chb02: pre=1.07 ictal=1.06 -> PASS
+  chb03: pre=1.26 ictal=1.07 -> PASS
+  chb04: pre=1.02 ictal=1.04 -> FAIL
+  chb05: pre=1.04 ictal=1.05 -> FAIL
+
+P3E-B-4: Eta peaks during/after ictal
+  chb01: pre=0.5073 ictal=0.4933 post=0.5409 -> PASS
+  chb02: pre=0.5269 ictal=0.4689 post=0.4966 -> FAIL
+  chb03: pre=0.5063 ictal=0.5048 post=0.4490 -> FAIL
+  chb04: pre=0.5094 ictal=0.5518 post=0.5778 -> PASS
+  chb05: pre=0.5084 ictal=0.5005 post=0.5164 -> PASS
+
+P3E-B-6: Dominant band during ictal vs pre-ictal
+  chb01: pre_dominant=theta ictal_dominant=gamma
+  chb02: pre_dominant=gamma ictal_dominant=gamma
+  chb03: pre_dominant=gamma ictal_dominant=gamma
+  chb04: pre_dominant=gamma ictal_dominant=gamma
+  chb05: pre_dominant=gamma ictal_dominant=gamma
