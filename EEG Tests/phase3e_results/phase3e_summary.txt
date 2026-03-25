@@ -1,0 +1,71 @@
+DS Phase 3E: EEG Seizure Results Summary
+============================================================
+
+
+--- chb01 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR
+pre_ictal         840     0.4737     3.74   0.2027    2.611
+ictal             449     0.4608     3.77   0.2013    2.586
+post_ictal        826     0.4443     3.66   0.2055    2.565
+
+
+--- chb02 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR
+pre_ictal         360     0.4279     3.90   0.1698    2.471
+ictal             175     0.4638     3.79   0.1847    2.528
+post_ictal        354     0.4324     3.70   0.1808    2.488
+
+
+--- chb03 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR
+pre_ictal         840     0.4543     3.79   0.1944    2.579
+ictal             409     0.4211     3.82   0.1825    2.499
+post_ictal        826     0.4447     3.84   0.1938    2.586
+
+
+--- chb04 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR
+pre_ictal         120     0.4343     3.68   0.2212    2.607
+ictal             103     0.4254     3.66   0.1882    2.507
+post_ictal        118     0.4027     3.37   0.2172    2.516
+
+
+--- chb05 ---
+Epoch               N    SV2/SV1     Rank      Eta       PR
+pre_ictal         600     0.4022     3.68   0.1861    2.433
+ictal             563     0.4146     3.71   0.1910    2.470
+post_ictal        590     0.4289     3.82   0.1757    2.506
+
+
+============================================================
+P3E-1 KILL TEST: SV2/SV1 ictal > pre-ictal by >= 0.05
+------------------------------------------------------------
+  chb01: pre=0.4737 ictal=0.4608 delta=-0.0129 → FAIL
+  chb02: pre=0.4279 ictal=0.4638 delta=+0.0359 → FAIL
+  chb03: pre=0.4543 ictal=0.4211 delta=-0.0332 → FAIL
+  chb04: pre=0.4343 ictal=0.4254 delta=-0.0089 → FAIL
+  chb05: pre=0.4022 ictal=0.4146 delta=+0.0124 → FAIL
+
+P3E-1 OVERALL: 0/5 patients pass. KILL TEST FAILS
+
+============================================================
+P3E-2: SV2/SV1 post-ictal < ictal
+  chb01: ictal=0.4608 post=0.4443 → PASS
+  chb02: ictal=0.4638 post=0.4324 → PASS
+  chb03: ictal=0.4211 post=0.4447 → FAIL
+  chb04: ictal=0.4254 post=0.4027 → PASS
+  chb05: ictal=0.4146 post=0.4289 → FAIL
+
+P3E-3: Rank decreases during ictal
+  chb01: pre_rank=3.74 ictal_rank=3.77 → FAIL
+  chb02: pre_rank=3.90 ictal_rank=3.79 → PASS
+  chb03: pre_rank=3.79 ictal_rank=3.82 → FAIL
+  chb04: pre_rank=3.68 ictal_rank=3.66 → PASS
+  chb05: pre_rank=3.68 ictal_rank=3.71 → FAIL
+
+P3E-4: Eta peaks during/after ictal
+  chb01: pre_eta=0.2027 ictal_eta=0.2013 post_eta=0.2055 → PASS
+  chb02: pre_eta=0.1698 ictal_eta=0.1847 post_eta=0.1808 → PASS
+  chb03: pre_eta=0.1944 ictal_eta=0.1825 post_eta=0.1938 → FAIL
+  chb04: pre_eta=0.2212 ictal_eta=0.1882 post_eta=0.2172 → FAIL
+  chb05: pre_eta=0.1861 ictal_eta=0.1910 post_eta=0.1757 → PASS
