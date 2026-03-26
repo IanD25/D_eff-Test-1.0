@@ -50,26 +50,32 @@ All measured on N=128 square lattice with thermal kernel FIM.
 
 ---
 
-### 4B: q=4 Potts (Continuous/First-Order Boundary) -- PARTIAL PASS
+### 4B: q=4 Potts (Continuous/First-Order Boundary) -- PASS
 
 **Setup.** N=128 square lattice, Wolff cluster, T_c = 1/ln(3) ~ 0.9102 (exact, Baxter 1973). q=4 sits exactly on the continuous/first-order boundary with logarithmic corrections to scaling.
 
-**Result.** SV2/SV1 = 0.521 at T/T_c = 0.989.
+**N=128 result.** SV2/SV1 = 0.521 at T/T_c = 0.989 — initially appeared to violate q-ordering (below q=5's 0.691).
 
-**Kill criteria evaluation:**
+**Finite-size scaling resolves the anomaly:**
 
-| Criterion | Result | Notes |
-|-----------|--------|-------|
-| P4B-1 (KILL) | KILLED | 0.521 < 0.691 (q=5 threshold) |
-| P4B-2 | PASS | Peak within +/-10% of T_c |
-| P4B-3 | FAIL | q-ordering violated (q=4 < q=5) |
-| P4B-4 | INCONCLUSIVE | rank=1 everywhere |
+| N | SV2/SV1 at T_c | Rank | Chi | Runtime |
+|---|----------------|------|-----|---------|
+| 128 | 0.521 | 1.0 | 7.7 | 9 min |
+| 256 | 0.973 | 3.0 | 317.1 | 60 min |
+| 512 | **1.000** | **3.0** | **1052.9** | 123 min |
 
-**Interpretation.** The q-ordering violation is explained by logarithmic corrections at finite N=128. Theory predicts SV2/SV1 -> 1.0 as N -> infinity for q=4 (continuous transition), but convergence is logarithmically slow. A finite-size scaling study (N=256, 512) is running to confirm this.
+At N=512, q=4 Potts achieves SV2/SV1 = 1.0000 — identical to 2D Ising. Rank jumps from 1 (N=128) to 3 (N>=256), matching the Ising rank=d+1 pattern. Susceptibility diverges as expected for a continuous transition.
 
-A sharp transition is visible in the data: SV2/SV1 drops from 0.521 to 0.157 between T/T_c = 0.989 and 1.011.
+**Kill criteria evaluation (revised with FSS):**
 
-**Classification: PARTIAL PASS** -- peak location correct, magnitude suppressed by known finite-size effects. Finite-size scaling study pending.
+| Criterion | N=128 | N=512 | Notes |
+|-----------|-------|-------|-------|
+| P4B-1 | KILLED (0.521) | **PASS (1.000)** | Exceeds q=5 threshold |
+| P4B-2 | PASS | PASS | Peak at T_c |
+| P4B-3 | FAIL | **PASS** | q-ordering restored: q=2 (1.000) = q=4 (1.000) > q=5 (0.691) |
+| P4B-4 | INCONCLUSIVE | **PASS** | rank=3 at T_c |
+
+**Classification: PASS** -- q=4 Potts transition is continuous, as theory predicts. Logarithmic corrections suppress SV2/SV1 by ~50% at N=128 but the correct behavior emerges by N=512. This demonstrates that finite-size scaling is essential for marginal transitions.
 
 ---
 
@@ -113,7 +119,7 @@ The Phase 4 results sharpen the original two-scale commensurability hypothesis f
 | 2D Potts q=5 | xi <-> L | Partial (first-order, coexistence) | 0.691 at T_c | DETECTED |
 | 2D Potts q=10 | xi <-> L | Partial (strong first-order, short xi) | 0.374 at T_c | DETECTED |
 | 2D XY (BKT) | xi <-> L | Yes (algebraic -> exponential C(r)) | 0.068 at T_BKT | DETECTED (weak) |
-| 2D Potts q=4 | xi <-> L | Yes (log corrections suppress) | 0.521 at T_c | PARTIAL (finite-size) |
+| 2D Potts q=4 | xi <-> L | Yes (log-suppressed at N=128, full at N=512) | 1.000 at T_c (N=512) | DETECTED |
 | Kuramoto | K <-> K_c | No spatial structure exists | 0.9998 flat | MISMATCH |
 | 3D Anderson | xi_loc <-> L | No (isotropic in all regimes) | 0.255 flat | MISMATCH |
 | EEG seizure | -- | Single-scale takeover | Noise | MISMATCH |
@@ -132,7 +138,7 @@ Systems failing condition 1 (Kuramoto: no spatial structure) or condition 3 (And
 
 - The FIM diagnostic is a **2D lattice phase transition detector**, not a universal transition detector.
 - It works across universality classes (Ising, Potts, BKT) as long as the lattice is 2D and the transition produces anisotropy.
-- The continuous/first-order boundary (q=4) is detectable but requires finite-size scaling to resolve logarithmic corrections.
+- The continuous/first-order boundary (q=4) is fully detectable: SV2/SV1 = 1.000 at N=512, confirming continuous transition despite severe log corrections at N=128.
 - 3D systems with isotropic transitions are outside the domain -- would need an anisotropic variant (e.g., quasi-2D layers, directed lattice) to break the symmetry.
 
 ---
@@ -145,8 +151,9 @@ Systems failing condition 1 (Kuramoto: no spatial structure) or condition 3 (And
 | `PHASE4A_KURAMOTO/xy_fisher_phase4a.py` | 2D XY BKT test (weak pass) |
 | `PHASE4A_KURAMOTO/results/` | XY model outputs |
 | `PHASE4B_POTTS4/potts4_fisher_phase4b.py` | q=4 Potts N=128 (partial pass) |
-| `PHASE4B_POTTS4/potts4_finite_size_scaling.py` | q=4 FSS study N=256,512 (running) |
+| `PHASE4B_POTTS4/potts4_finite_size_scaling.py` | q=4 FSS study N=256,512 (complete) |
 | `PHASE4B_POTTS4/results/` | q=4 N=128 outputs |
+| `PHASE4B_POTTS4/results_fss/` | FSS outputs: N=256 (0.973), N=512 (1.000) |
 | `PHASE4C_ANDERSON/anderson_fisher_phase4c.py` | Anderson 3D test (mismatch result) |
 | `PHASE4C_ANDERSON/results/` | Anderson outputs |
 | `docs/PHASE4_ASSESSMENT.md` | This document |
@@ -159,8 +166,7 @@ Systems failing condition 1 (Kuramoto: no spatial structure) or condition 3 (And
 |-----------|--------|
 | Phase 4A (Kuramoto) | Complete -- system type mismatch |
 | Phase 4A' (XY/BKT) | Complete -- weak pass |
-| Phase 4B (q=4 Potts N=128) | Complete -- partial pass |
-| Phase 4B-FSS (q=4 N=256,512) | Running (background, ~3 hours) |
+| Phase 4B (q=4 Potts) | Complete -- PASS (N=512: SV2/SV1=1.000) |
 | Phase 4C (Anderson) | Complete -- system type mismatch |
 
 ---
