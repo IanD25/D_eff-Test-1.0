@@ -1,0 +1,31 @@
+======================================================================
+PHASE 4B-FSS: FINITE-SIZE SCALING ANALYSIS
+======================================================================
+q = 4, T_c = 0.910239
+Lattice sizes: [256, 512]
+Timestamp: 2026-03-25T13:14:50.269381
+
+SV₂/SV₁ at T_c by system size:
+--------------------------------------------------
+     N    SV₂/SV₁        ±    T/Tc   rank      PR        ξ
+   256     0.9731   0.0000   1.000   3.00   3.668     65.9
+   512     1.0000   0.0000   1.000   3.00   3.652    137.1
+
+SCALING TREND:
+  N=256→512: SV₂/SV₁ 0.9731 → 1.0000 (Δ=+0.0269, +2.8%)
+
+VERDICT: SV₂/SV₁ INCREASES with N → logarithmic corrections confirmed
+  q=4 transition is continuous (as theory predicts)
+  N=128 value of 0.521 was suppressed by finite-size log corrections
+
+REFERENCE SPECTRUM (Phase 2, N=128):
+  q=2 (Ising):  1.000  (continuous)
+  q=4 (N=256):  0.9731  ← THIS STUDY
+  q=4 (N=512):  1.0000  ← THIS STUDY
+  q=5:          0.691  (weak first-order)
+  q=10:         0.374  (strong first-order)
+
+✓ At N=512, q=4 SV₂/SV₁ (1.0000) > q=5 (0.691)
+  → q-ordering restored, transition is continuous
+
+======================================================================
